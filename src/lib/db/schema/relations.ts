@@ -3,14 +3,17 @@ import { relations } from "drizzle-orm";
 import { users } from "./users";
 import { methodologyProgress } from "./methodologies";
 import { tasks } from "./tasks";
-import { gtdProjects } from "./gtd";
+import { gtdProjects, gtdContexts, gtdWeeklyReviews } from "./gtd";
 import { sessions, sessionTasks } from "./sessions";
 import { timeBlocks } from "./time-blocks";
 import { timeEntries } from "./time-entries";
+import { batchCategories } from "./batch-categories";
 import { coachingMessages, coachingConversations } from "./coaching";
 import { pushSubscriptions } from "./notifications";
 import { videoProgress } from "./video-progress";
 import { dailyAnalytics, weeklyAnalytics } from "./analytics";
+import { milestonesAchieved } from "./milestones";
+import { userGoals } from "./user-goals";
 import { auditLog } from "./audit-log";
 
 // ============================================================================
@@ -24,12 +27,17 @@ export const usersRelations = relations(users, ({ many }) => ({
   timeBlocks: many(timeBlocks),
   timeEntries: many(timeEntries),
   gtdProjects: many(gtdProjects),
+  gtdContexts: many(gtdContexts),
+  gtdWeeklyReviews: many(gtdWeeklyReviews),
+  batchCategories: many(batchCategories),
   coachingMessages: many(coachingMessages),
   coachingConversations: many(coachingConversations),
   pushSubscriptions: many(pushSubscriptions),
   videoProgress: many(videoProgress),
   dailyAnalytics: many(dailyAnalytics),
   weeklyAnalytics: many(weeklyAnalytics),
+  milestonesAchieved: many(milestonesAchieved),
+  userGoals: many(userGoals),
   auditLog: many(auditLog),
 }));
 
@@ -48,7 +56,7 @@ export const methodologyProgressRelations = relations(
 );
 
 // ============================================================================
-// GTD PROJECT RELATIONS
+// GTD RELATIONS
 // ============================================================================
 
 export const gtdProjectsRelations = relations(
@@ -59,6 +67,23 @@ export const gtdProjectsRelations = relations(
       references: [users.id],
     }),
     tasks: many(tasks),
+  })
+);
+
+export const gtdContextsRelations = relations(gtdContexts, ({ one }) => ({
+  user: one(users, {
+    fields: [gtdContexts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const gtdWeeklyReviewsRelations = relations(
+  gtdWeeklyReviews,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [gtdWeeklyReviews.userId],
+      references: [users.id],
+    }),
   })
 );
 
@@ -103,6 +128,7 @@ export const sessionsRelations = relations(sessions, ({ one, many }) => ({
     references: [timeBlocks.id],
   }),
   sessionTasks: many(sessionTasks),
+  timeEntries: many(timeEntries),
 }));
 
 export const sessionTasksRelations = relations(sessionTasks, ({ one }) => ({
@@ -153,6 +179,20 @@ export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
     references: [timeBlocks.id],
   }),
 }));
+
+// ============================================================================
+// BATCH CATEGORIES RELATIONS
+// ============================================================================
+
+export const batchCategoriesRelations = relations(
+  batchCategories,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [batchCategories.userId],
+      references: [users.id],
+    }),
+  })
+);
 
 // ============================================================================
 // COACHING RELATIONS
@@ -226,6 +266,31 @@ export const weeklyAnalyticsRelations = relations(
     }),
   })
 );
+
+// ============================================================================
+// MILESTONES RELATIONS
+// ============================================================================
+
+export const milestonesAchievedRelations = relations(
+  milestonesAchieved,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [milestonesAchieved.userId],
+      references: [users.id],
+    }),
+  })
+);
+
+// ============================================================================
+// USER GOALS RELATIONS
+// ============================================================================
+
+export const userGoalsRelations = relations(userGoals, ({ one }) => ({
+  user: one(users, {
+    fields: [userGoals.userId],
+    references: [users.id],
+  }),
+}));
 
 // ============================================================================
 // AUDIT LOG RELATIONS

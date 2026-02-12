@@ -1,5 +1,7 @@
 import {
+  boolean,
   decimal,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -19,26 +21,30 @@ export const methodologyProgress = pgTable(
       .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
     methodology: methodologyEnum("methodology").notNull(),
-    status: methodologyStatusEnum("status").default("locked"),
+    status: methodologyStatusEnum("status").default("locked").notNull(),
     unlockedAt: timestamp("unlocked_at", { withTimezone: true }),
     activatedAt: timestamp("activated_at", { withTimezone: true }),
     masteredAt: timestamp("mastered_at", { withTimezone: true }),
-    totalSessions: integer("total_sessions").default(0),
-    totalMinutes: integer("total_minutes").default(0),
-    currentStreak: integer("current_streak").default(0),
-    longestStreak: integer("longest_streak").default(0),
-    masteryScore: decimal("mastery_score", { precision: 5, scale: 2 }).default(
-      "0.00"
-    ),
+    totalSessions: integer("total_sessions").default(0).notNull(),
+    totalMinutes: integer("total_minutes").default(0).notNull(),
+    currentStreak: integer("current_streak").default(0).notNull(),
+    longestStreak: integer("longest_streak").default(0).notNull(),
+    masteryScore: decimal("mastery_score", { precision: 5, scale: 2 })
+      .default("0.00")
+      .notNull(),
     lastSessionAt: timestamp("last_session_at", { withTimezone: true }),
-    settings: jsonb("settings").default({}),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    videoWatched: boolean("video_watched").default(false).notNull(),
+    daysActive: integer("days_active").default(0).notNull(),
+    settings: jsonb("settings").default({}).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
-    uniqueIndex("uq_methodology_progress").on(
+    uniqueIndex("uq_methodology_progress_user_method").on(
       table.userId,
       table.methodology
     ),
+    index("idx_methodology_progress_user").on(table.userId),
+    index("idx_methodology_progress_status").on(table.userId, table.status),
   ]
 );

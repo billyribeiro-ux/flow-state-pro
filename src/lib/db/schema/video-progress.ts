@@ -22,19 +22,21 @@ export const videoProgress = pgTable(
       .notNull(),
     methodology: methodologyEnum("methodology").notNull(),
     muxAssetId: varchar("mux_asset_id", { length: 255 }).notNull(),
+    muxPlaybackId: varchar("mux_playback_id", { length: 255 }),
+    videoDurationSeconds: integer("video_duration_seconds"),
     watchPercentage: decimal("watch_percentage", {
       precision: 5,
       scale: 2,
-    }).default("0.00"),
-    totalWatchTime: integer("total_watch_time").default(0), // seconds
-    completed: boolean("completed").default(false),
+    }).default("0.00").notNull(),
+    totalWatchTimeSeconds: integer("total_watch_time_seconds").default(0).notNull(),
+    completed: boolean("completed").default(false).notNull(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     lastPosition: decimal("last_position", {
       precision: 10,
       scale: 2,
-    }).default("0.00"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    }).default("0.00").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex("uq_video_progress").on(

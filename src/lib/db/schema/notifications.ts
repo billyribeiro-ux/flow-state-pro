@@ -22,9 +22,10 @@ export const pushSubscriptions = pgTable(
     auth: text("auth").notNull(),
     deviceName: varchar("device_name", { length: 255 }),
     userAgent: text("user_agent"),
-    isActive: boolean("is_active").default(true),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    isActive: boolean("is_active").default(true).notNull(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     index("idx_push_subscriptions_user").on(table.userId),

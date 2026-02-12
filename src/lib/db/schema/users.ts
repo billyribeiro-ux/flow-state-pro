@@ -1,6 +1,7 @@
 import {
   boolean,
   date,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -38,9 +39,9 @@ export const users = pgTable(
     firstName: varchar("first_name", { length: 100 }),
     lastName: varchar("last_name", { length: 100 }),
     avatarUrl: text("avatar_url"),
-    timezone: varchar("timezone", { length: 50 }).default("UTC"),
-    role: userRoleEnum("role").default("user"),
-    onboardingCompleted: boolean("onboarding_completed").default(false),
+    timezone: varchar("timezone", { length: 50 }).default("UTC").notNull(),
+    role: userRoleEnum("role").default("user").notNull(),
+    onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
     activeMethodology: methodologyEnum("active_methodology"),
     coachingPreferences: jsonb("coaching_preferences")
       .default({
@@ -51,7 +52,8 @@ export const users = pgTable(
         morning_brief_time: "07:00",
         weekly_review_day: 0,
       })
-      .$type<CoachingPreferences>(),
+      .$type<CoachingPreferences>()
+      .notNull(),
     notificationSettings: jsonb("notification_settings")
       .default({
         push_enabled: true,
@@ -59,17 +61,23 @@ export const users = pgTable(
         email_frequency: "daily",
         sound_enabled: true,
       })
-      .$type<NotificationSettings>(),
-    streakCurrent: integer("streak_current").default(0),
-    streakLongest: integer("streak_longest").default(0),
+      .$type<NotificationSettings>()
+      .notNull(),
+    streakCurrent: integer("streak_current").default(0).notNull(),
+    streakLongest: integer("streak_longest").default(0).notNull(),
     streakLastActive: date("streak_last_active"),
-    totalFocusMinutes: integer("total_focus_minutes").default(0),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    totalFocusMinutes: integer("total_focus_minutes").default(0).notNull(),
+    totalTasksCompleted: integer("total_tasks_completed").default(0).notNull(),
+    totalFrogsEaten: integer("total_frogs_eaten").default(0).notNull(),
+    totalPomodorosCompleted: integer("total_pomodoros_completed").default(0).notNull(),
+    totalDeepWorkMinutes: integer("total_deep_work_minutes").default(0).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (table) => [
-    uniqueIndex("uq_users_clerk_id").on(table.clerkId),
-    uniqueIndex("uq_users_email").on(table.email),
+    index("idx_users_clerk_id").on(table.clerkId),
+    index("idx_users_email").on(table.email),
+    index("idx_users_active_methodology").on(table.activeMethodology),
   ]
 );

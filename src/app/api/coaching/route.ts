@@ -13,22 +13,31 @@ export async function POST(request: NextRequest) {
     const user = await getDbUser();
     const { messages, conversationId } = await request.json();
 
+    const prefs = user.coachingPreferences as Record<string, string> | null;
+
     const ctx: UserContext = {
       userId: user.id,
+      firstName: user.firstName ?? null,
       timezone: user.timezone ?? "UTC",
       activeMethodology: (user.activeMethodology as UserContext["activeMethodology"]) ?? null,
-      coachingTone: (user.coachingPreferences as Record<string, string>)?.tone as UserContext["coachingTone"] ?? "encouraging",
-      nudgeFrequency: (user.coachingPreferences as Record<string, string>)?.nudge_frequency as UserContext["nudgeFrequency"] ?? "moderate",
-      quietHoursStart: (user.coachingPreferences as Record<string, string>)?.quiet_hours_start ?? null,
-      quietHoursEnd: (user.coachingPreferences as Record<string, string>)?.quiet_hours_end ?? null,
-      morningBriefTime: (user.coachingPreferences as Record<string, string>)?.morning_brief_time ?? "07:00",
-      streakCurrent: user.currentStreak ?? 0,
+      unlockedMethodologies: [],
+      coachingTone: (prefs?.tone as UserContext["coachingTone"]) ?? "encouraging",
+      nudgeFrequency: (prefs?.nudge_frequency as UserContext["nudgeFrequency"]) ?? "moderate",
+      quietHoursStart: prefs?.quiet_hours_start ?? null,
+      quietHoursEnd: prefs?.quiet_hours_end ?? null,
+      morningBriefTime: prefs?.morning_brief_time ?? "07:00",
+      streakCurrent: user.streakCurrent ?? 0,
+      streakLongest: user.streakLongest ?? 0,
       todaysSessions: 0,
-      todaysFocusMinutes: user.totalFocusMinutes ?? 0,
+      todaysFocusMinutes: 0,
+      todaysPomodorosCompleted: 0,
       pendingTasks: 0,
       frogStatus: "not_set",
+      frogTitle: null,
       unprocessedInboxItems: 0,
       activeTimer: false,
+      totalFocusMinutes: user.totalFocusMinutes ?? 0,
+      totalTasksCompleted: user.totalTasksCompleted ?? 0,
     };
 
     const systemPrompt = buildCoachingSystemPrompt(ctx);

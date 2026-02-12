@@ -1,12 +1,19 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 
-const serverEnvSchema = z.object({
+/**
+ * FlowState Pro — Environment Variable Validation
+ *
+ * Validates all env vars at build time using Zod.
+ * Import this in next.config.ts or root layout to fail fast.
+ */
+
+const serverSchema = z.object({
   // Database
-  DATABASE_URL: z.url(),
-  DATABASE_URL_UNPOOLED: z.url().optional(),
+  DATABASE_URL: z.string().url(),
+  DATABASE_URL_UNPOOLED: z.string().url().optional(),
 
   // Redis
-  UPSTASH_REDIS_REST_URL: z.url(),
+  UPSTASH_REDIS_REST_URL: z.string().url(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
 
   // Auth
@@ -24,18 +31,18 @@ const serverEnvSchema = z.object({
 
   // Email
   RESEND_API_KEY: z.string().startsWith("re_"),
-  RESEND_FROM_EMAIL: z.email(),
+  RESEND_FROM_EMAIL: z.string().email(),
 
   // Background Jobs
   INNGEST_EVENT_KEY: z.string().min(1),
   INNGEST_SIGNING_KEY: z.string().startsWith("signkey-"),
 
-  // Push Notifications
+  // Push
   VAPID_PRIVATE_KEY: z.string().min(1),
   VAPID_SUBJECT: z.string().startsWith("mailto:"),
 
-  // Observability
-  SENTRY_DSN: z.url().optional(),
+  // Sentry
+  SENTRY_DSN: z.string().url().optional(),
   SENTRY_AUTH_TOKEN: z.string().optional(),
   SENTRY_ORG: z.string().optional(),
   SENTRY_PROJECT: z.string().optional(),
@@ -46,8 +53,8 @@ const serverEnvSchema = z.object({
     .default("development"),
 });
 
-const clientEnvSchema = z.object({
-  NEXT_PUBLIC_APP_URL: z.url(),
+const clientSchema = z.object({
+  NEXT_PUBLIC_APP_URL: z.string().url(),
   NEXT_PUBLIC_APP_NAME: z.string().min(1),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().startsWith("pk_"),
   NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().default("/sign-in"),
@@ -55,42 +62,54 @@ const clientEnvSchema = z.object({
   NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: z.string().default("/onboarding"),
   NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: z.string().default("/onboarding"),
   NEXT_PUBLIC_POSTHOG_KEY: z.string().startsWith("phc_").optional(),
-  NEXT_PUBLIC_POSTHOG_HOST: z.url().optional(),
-  NEXT_PUBLIC_SENTRY_DSN: z.url().optional(),
+  NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   NEXT_PUBLIC_VAPID_KEY: z.string().min(1),
 });
 
-export type ServerEnv = z.infer<typeof serverEnvSchema>;
-export type ClientEnv = z.infer<typeof clientEnvSchema>;
+export type ServerEnv = z.infer<typeof serverSchema>;
+export type ClientEnv = z.infer<typeof clientSchema>;
 
+/**
+ * Validate server-side environment variables.
+ * Call this in instrumentation.ts or server startup.
+ */
 export function validateServerEnv(): ServerEnv {
-  const parsed = serverEnvSchema.safeParse(process.env);
+  const parsed = serverSchema.safeParse(process.env);
   if (!parsed.success) {
     console.error(
       "❌ Invalid server environment variables:",
-      parsed.error.format()
+      parsed.error.flatten().fieldErrors
     );
     throw new Error("Invalid server environment variables");
   }
   return parsed.data;
 }
 
+/**
+ * Validate client-side environment variables.
+ * Call this in root layout.
+ */
 export function validateClientEnv(): ClientEnv {
-  const clientVars: Record<string, string | undefined> = {};
-  for (const key of Object.keys(clientEnvSchema.shape)) {
-    clientVars[key] = process.env[key];
+  const clientEnv: Record<string, string | undefined> = {};
+  for (const key of Object.keys(clientSchema.shape)) {
+    clientEnv[key] = process.env[key];
   }
-  const parsed = clientEnvSchema.safeParse(clientVars);
+  const parsed = clientSchema.safeParse(clientEnv);
   if (!parsed.success) {
     console.error(
       "❌ Invalid client environment variables:",
-      parsed.error.format()
+      parsed.error.flatten().fieldErrors
     );
     throw new Error("Invalid client environment variables");
   }
   return parsed.data;
 }
 
+/**
+ * Type-safe env access.
+ * Use: env.DATABASE_URL instead of process.env.DATABASE_URL
+ */
 export const env = {
   ...process.env,
 } as ServerEnv & ClientEnv;

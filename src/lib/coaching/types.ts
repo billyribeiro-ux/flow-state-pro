@@ -22,20 +22,27 @@ export type MethodologyId =
 
 export interface UserContext {
   userId: string;
+  firstName: string | null;
   timezone: string;
   activeMethodology: MethodologyId | null;
+  unlockedMethodologies: MethodologyId[];
   coachingTone: CoachingTone;
   nudgeFrequency: NudgeFrequency;
   quietHoursStart: string | null;
   quietHoursEnd: string | null;
   morningBriefTime: string;
   streakCurrent: number;
+  streakLongest: number;
   todaysSessions: number;
   todaysFocusMinutes: number;
+  todaysPomodorosCompleted: number;
   pendingTasks: number;
   frogStatus: "not_set" | "set" | "in_progress" | "completed";
+  frogTitle: string | null;
   unprocessedInboxItems: number;
   activeTimer: boolean;
+  totalFocusMinutes: number;
+  totalTasksCompleted: number;
 }
 
 export interface CoachingMessage {
@@ -71,4 +78,29 @@ export interface DeliveryStrategy {
   maxPerDay: Record<NudgeFrequency, number>;
   channelPriority: Record<CoachingPriority, CoachingChannel[]>;
   quietHoursExceptions: CoachingPriority[];
+}
+
+export interface MethodologyMetadata {
+  id: MethodologyId;
+  name: string;
+  tagline: string;
+  description: string;
+  icon: string;
+  color: string;
+  colorLight: string;
+  creator: string;
+  keyBenefit: string;
+  idealFor: string[];
+  videoDescription: string;
+  onboardingHook: string;
+}
+
+export interface MilestoneDef {
+  key: string;
+  label: string;
+  description: string;
+  threshold: number;
+  field: string;
+  methodology?: MethodologyId;
+  icon: string;
 }

@@ -29,19 +29,19 @@ export const sessions = pgTable(
     status: sessionStatusEnum("status").default("planned"),
 
     // Timing
-    plannedDuration: integer("planned_duration").notNull(), // seconds
-    actualDuration: integer("actual_duration"),
+    plannedDurationSeconds: integer("planned_duration_seconds").notNull(),
+    actualDurationSeconds: integer("actual_duration_seconds"),
     startedAt: timestamp("started_at", { withTimezone: true }),
     endedAt: timestamp("ended_at", { withTimezone: true }),
     pausedAt: timestamp("paused_at", { withTimezone: true }),
-    totalPauseDuration: integer("total_pause_duration").default(0),
+    totalPauseSeconds: integer("total_pause_seconds").default(0).notNull(),
 
     // Pomodoro-specific
     pomodoroCycle: smallint("pomodoro_cycle"),
     pomodoroSet: smallint("pomodoro_set"),
 
     // Deep Work-specific
-    distractionCount: integer("distraction_count").default(0),
+    distractionCount: integer("distraction_count").default(0).notNull(),
     distractionLog: jsonb("distraction_log")
       .default([])
       .$type<
@@ -49,24 +49,28 @@ export const sessions = pgTable(
           timestamp: string;
           description: string;
           duration_seconds: number;
+          category: string;
         }>
-      >(),
+      >()
+      .notNull(),
 
     // Batch-specific
     batchCategory: varchar("batch_category", { length: 100 }),
-    tasksCompletedCount: integer("tasks_completed_count").default(0),
+    tasksCompletedCount: integer("tasks_completed_count").default(0).notNull(),
 
     // Quality metrics
     focusRating: smallint("focus_rating"),
-    energyLevel: smallint("energy_level"),
+    energyLevelBefore: smallint("energy_level_before"),
+    energyLevelAfter: smallint("energy_level_after"),
     notes: text("notes"),
+    abandonReason: text("abandon_reason"),
 
     // Linked entities
-    taskId: uuid("task_id").references(() => tasks.id),
+    taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
     timeBlockId: uuid("time_block_id"),
 
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     index("idx_sessions_user_methodology").on(
@@ -77,9 +81,8 @@ export const sessions = pgTable(
     index("idx_sessions_active")
       .on(table.userId, table.status)
       .where(sql`status IN ('active', 'paused')`),
-    index("idx_sessions_completed")
-      .on(table.userId, table.methodology, table.endedAt)
-      .where(sql`status = 'completed'`),
+    index("idx_sessions_completed").on(table.userId, table.methodology, table.endedAt),
+    index("idx_sessions_type").on(table.userId, table.sessionType),
   ]
 );
 
@@ -93,9 +96,9 @@ export const sessionTasks = pgTable(
     taskId: uuid("task_id")
       .references(() => tasks.id, { onDelete: "cascade" })
       .notNull(),
-    completedInSession: boolean("completed_in_session").default(false),
-    timeSpent: integer("time_spent"), // seconds
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    completedInSession: boolean("completed_in_session").default(false).notNull(),
+    timeSpentSeconds: integer("time_spent_seconds"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex("uq_session_tasks").on(table.sessionId, table.taskId),
