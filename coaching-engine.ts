@@ -15,7 +15,7 @@
 // TYPES
 // ============================================================================
 
-import type { MethodologyEnum } from "./schema-core";
+type MethodologyEnum = "pomodoro" | "gtd" | "eisenhower" | "time_blocking" | "deep_work" | "eat_the_frog" | "two_minute" | "batch" | "pareto" | "time_audit";
 
 type CoachingChannel = "in_app" | "push" | "email";
 type CoachingPriority = "low" | "medium" | "high" | "critical";
