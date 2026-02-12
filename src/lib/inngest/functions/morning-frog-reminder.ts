@@ -19,7 +19,7 @@ export const morningFrogReminder = inngest.createFunction(
         .where(
           and(
             eq(users.onboardingCompleted, true),
-            eq(users.activeMethodology, "eat-the-frog")
+            eq(users.activeMethodology, "eat_the_frog")
           )
         );
     });
@@ -50,13 +50,18 @@ export const morningFrogReminder = inngest.createFunction(
 
         await db.insert(coachingMessages).values({
           userId: user.id,
+          methodology: "eat_the_frog",
           messageType: "nudge",
           trigger: "scheduled",
-          content: message,
+          title: frog ? "Time to Eat Your Frog" : "Set Your Frog for Today",
+          body: message,
+          actionUrl: "/techniques/eat-the-frog",
+          actionLabel: frog ? "Start Frog" : "Set Frog",
           priority: frog ? "high" : "medium",
           channel: "in_app",
           status: "sent",
           sentAt: new Date(),
+          metadata: { triggerId: "eat_the_frog.morning" },
         });
 
         reminded++;

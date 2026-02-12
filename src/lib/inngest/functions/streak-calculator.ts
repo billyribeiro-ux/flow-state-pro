@@ -9,7 +9,7 @@ export const streakCalculator = inngest.createFunction(
   async ({ step }) => {
     const allUsers = await step.run("fetch-users", async () => {
       return db
-        .select({ id: users.id, currentStreak: users.currentStreak, longestStreak: users.longestStreak })
+        .select({ id: users.id, streakCurrent: users.streakCurrent, streakLongest: users.streakLongest })
         .from(users)
         .where(eq(users.onboardingCompleted, true));
     });
@@ -45,13 +45,13 @@ export const streakCalculator = inngest.createFunction(
           }
         }
 
-        const longestStreak = Math.max(streak, user.longestStreak ?? 0);
+        const newLongest = Math.max(streak, user.streakLongest ?? 0);
 
         await db
           .update(users)
           .set({
-            currentStreak: streak,
-            longestStreak,
+            streakCurrent: streak,
+            streakLongest: newLongest,
             updatedAt: new Date(),
           })
           .where(eq(users.id, user.id));
@@ -60,7 +60,7 @@ export const streakCalculator = inngest.createFunction(
         const todayStr = today.toISOString().split("T")[0]!;
         await db
           .update(dailyAnalytics)
-          .set({ currentStreak: streak })
+          .set({ streakDay: streak })
           .where(
             and(
               eq(dailyAnalytics.userId, user.id),

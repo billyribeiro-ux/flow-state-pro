@@ -50,6 +50,15 @@ type FlowStateEvents = {
       methodology?: string;
     };
   };
+  "task/deferred": {
+    data: {
+      userId: string;
+      taskId: string;
+      title: string;
+      isTwoMinute: boolean;
+      deferCount: number;
+    };
+  };
   "timer/five_minutes_remaining": {
     data: {
       userId: string;
@@ -69,6 +78,12 @@ type FlowStateEvents = {
       currentMethodology: string;
       unlockedMethodology: string;
       unlockedMethodologySlug: string;
+    };
+  };
+  "methodology/unlocked": {
+    data: {
+      userId: string;
+      methodology: string;
     };
   };
   "video/progress_updated": {

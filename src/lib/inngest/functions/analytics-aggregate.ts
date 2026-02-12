@@ -32,14 +32,14 @@ export const analyticsAggregate = inngest.createFunction(
           .select({
             focusMinutes: sql<number>`COALESCE(SUM(
               CASE WHEN ${sessions.sessionType} IN ('focus', 'deep_work', 'frog', 'batch')
-              THEN EXTRACT(EPOCH FROM ${sessions.actualDuration}) / 60 ELSE 0 END
+              THEN ${sessions.actualDurationSeconds} / 60.0 ELSE 0 END
             ), 0)`,
             breakMinutes: sql<number>`COALESCE(SUM(
               CASE WHEN ${sessions.sessionType} = 'break'
-              THEN EXTRACT(EPOCH FROM ${sessions.actualDuration}) / 60 ELSE 0 END
+              THEN ${sessions.actualDurationSeconds} / 60.0 ELSE 0 END
             ), 0)`,
             sessionsCompleted: sql<number>`COUNT(CASE WHEN ${sessions.status} = 'completed' THEN 1 END)`,
-            pomodorosCompleted: sql<number>`COALESCE(SUM(${sessions.pomodoroCount}), 0)`,
+            pomodorosCompleted: sql<number>`COALESCE(SUM(${sessions.pomodoroSet}), 0)`,
             distractionCount: sql<number>`COALESCE(SUM(${sessions.distractionCount}), 0)`,
           })
           .from(sessions)
