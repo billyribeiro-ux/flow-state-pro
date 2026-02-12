@@ -2,9 +2,11 @@ import { db } from "@/lib/db";
 import { videoProgress } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
+type MethodologyId = typeof videoProgress.methodology.enumValues[number];
+
 export async function getVideoProgress(
   userId: string,
-  methodology: string,
+  methodology: MethodologyId,
   muxAssetId: string
 ) {
   const [progress] = await db
@@ -23,11 +25,11 @@ export async function getVideoProgress(
 
 export async function updateVideoProgress(
   userId: string,
-  methodology: string,
+  methodology: MethodologyId,
   muxAssetId: string,
   data: {
     watchPercentage: number;
-    totalWatchTime: number;
+    totalWatchTimeSeconds: number;
     lastPosition: number;
   }
 ) {
@@ -39,18 +41,18 @@ export async function updateVideoProgress(
       userId,
       methodology,
       muxAssetId,
-      watchPercentage: data.watchPercentage,
-      totalWatchTime: data.totalWatchTime,
-      lastPosition: data.lastPosition,
+      watchPercentage: String(data.watchPercentage),
+      totalWatchTimeSeconds: data.totalWatchTimeSeconds,
+      lastPosition: String(data.lastPosition),
       completed,
       completedAt: completed ? new Date() : null,
     })
     .onConflictDoUpdate({
       target: [videoProgress.userId, videoProgress.methodology, videoProgress.muxAssetId],
       set: {
-        watchPercentage: data.watchPercentage,
-        totalWatchTime: data.totalWatchTime,
-        lastPosition: data.lastPosition,
+        watchPercentage: String(data.watchPercentage),
+        totalWatchTimeSeconds: data.totalWatchTimeSeconds,
+        lastPosition: String(data.lastPosition),
         completed,
         completedAt: completed ? new Date() : undefined,
         updatedAt: new Date(),
@@ -58,7 +60,7 @@ export async function updateVideoProgress(
     });
 }
 
-export async function getUserVideoProgress(userId: string, methodology?: string) {
+export async function getUserVideoProgress(userId: string, methodology?: MethodologyId) {
   const conditions = [eq(videoProgress.userId, userId)];
   if (methodology) {
     conditions.push(eq(videoProgress.methodology, methodology));
@@ -72,11 +74,11 @@ export async function getUserVideoProgress(userId: string, methodology?: string)
 
 export async function getMethodologyVideoCompletion(
   userId: string,
-  methodology: string
+  methodology: MethodologyId
 ): Promise<number> {
   const progress = await getUserVideoProgress(userId, methodology);
   if (progress.length === 0) return 0;
 
-  const totalPercentage = progress.reduce((sum, p) => sum + (p.watchPercentage ?? 0), 0);
+  const totalPercentage = progress.reduce((sum: number, p) => sum + parseFloat(p.watchPercentage ?? "0"), 0);
   return Math.round(totalPercentage / progress.length);
 }
